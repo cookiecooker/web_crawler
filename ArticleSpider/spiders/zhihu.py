@@ -2,6 +2,11 @@ import re
 import scrapy
 import json
 
+try:
+    import urlparse as parse
+except:
+    from urllib import parse
+
 class ZhihuSpider(scrapy.Spider):
     name = "zhihu"
     allowed_domains = ["www.zhihu.com"]
@@ -14,7 +19,26 @@ class ZhihuSpider(scrapy.Spider):
     }
 
     def parse(self, response):
-        pass
+
+        all_urls = response.css("a::attr(href)").extract()
+        all_urls = [parse.urljoin(response.url, url) for url in all_urls]
+        all_urls = filter(lambda x:True if x.startswith("https") else False, all_urls) #exclude javascript file
+        for url in all_urls:
+            match_obj = re.match("(.*zhihu.com/question/(\d+))(/|$).*", url)
+            if match_obj:    
+                request_url = match_obj.group(1)
+                question_id = match_obj.group(2)
+
+                yield scrapy.Request(request_url, headers=self.headers, callback=)
+
+
+    def parse_question(self, response):
+        # deal with question page, extract specific question item
+        if "QuestionHeader-title" in response.text:  
+            # deal with new version
+        else    
+            # deal with old version
+            
 
     def start_requests(self):  
         return [scrapy.Request('https://www.zhihu.com/#signin', headers=self.headers, callback=self.login)]
